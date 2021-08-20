@@ -112,18 +112,18 @@ class PackagingDocumentationTests {
 		}
 	}
 
-	@TestTemplate
-	void bootJarRequiresUnpack() throws IOException {
-		this.gradleBuild.script("src/main/gradle/packaging/boot-jar-requires-unpack").build("bootJar");
-		File file = new File(this.gradleBuild.getProjectDir(),
-				"build/libs/" + this.gradleBuild.getProjectDir().getName() + ".jar");
-		assertThat(file).isFile();
-		try (JarFile jar = new JarFile(file)) {
-			JarEntry entry = jar.getJarEntry("BOOT-INF/lib/jruby-complete-1.7.25.jar");
-			assertThat(entry).isNotNull();
-			assertThat(entry.getComment()).startsWith("UNPACK:");
-		}
-	}
+//	@TestTemplate
+//	void bootJarRequiresUnpack() throws IOException {
+//		this.gradleBuild.script("src/main/gradle/packaging/boot-jar-requires-unpack").build("bootJar");
+//		File file = new File(this.gradleBuild.getProjectDir(),
+//				"build/libs/" + this.gradleBuild.getProjectDir().getName() + ".jar");
+//		assertThat(file).isFile();
+//		try (JarFile jar = new JarFile(file)) {
+//			JarEntry entry = jar.getJarEntry("BOOT-INF/lib/jruby-complete-1.7.25.jar");
+//			assertThat(entry).isNotNull();
+//			assertThat(entry.getComment()).startsWith("UNPACK:");
+//		}
+//	}
 
 	@TestTemplate
 	void bootJarIncludeLaunchScript() throws IOException {

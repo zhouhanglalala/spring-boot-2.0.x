@@ -265,15 +265,27 @@ public class SpringApplication {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+		// 一般启动的时候都是null
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
+		// 主资源 入口类
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+		// web应用类型推测
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
-		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+		// 根据spring.factories中的工厂名字字符串 创建和ApplicationContextInitializer类型对应的实例对象
+		Collection springFactories = getSpringFactoriesInstances(ApplicationContextInitializer.class);
+		// 设置环境初始器
+		setInitializers(springFactories);
+		// 根据spring.factories中的工厂名字字符串 创建和ApplicationListener类型对应的实例对象
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		// 设置入口类
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
 
+	/**
+	 * 找到程序入口
+	 * @return
+	 */
 	private Class<?> deduceMainApplicationClass() {
 		try {
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
@@ -284,7 +296,7 @@ public class SpringApplication {
 			}
 		}
 		catch (ClassNotFoundException ex) {
-			// Swallow and continue
+			// Swallow and continue 吃掉异常
 		}
 		return null;
 	}
@@ -296,8 +308,11 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		// 创建计时器
 		StopWatch stopWatch = new StopWatch();
+		// 计时开始
 		stopWatch.start();
+		// 声明环境对象
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
 		configureHeadlessProperty();
@@ -423,7 +438,9 @@ public class SpringApplication {
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes, Object... args) {
 		ClassLoader classLoader = getClassLoader();
 		// Use names and ensure unique to protect against duplicates
+		// 加载"META-INF/spring.factories"下的Spring Factories
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+		// 根据spring.factories中的工厂名字字符串 创建对应的实例对象
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
@@ -435,6 +452,7 @@ public class SpringApplication {
 		List<T> instances = new ArrayList<>(names.size());
 		for (String name : names) {
 			try {
+				// 根据spring.factories中的工厂字符串拿到类信息
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);

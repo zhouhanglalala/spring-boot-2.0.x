@@ -102,7 +102,7 @@ public class TomcatWebServer implements WebServer {
 					}
 				});
 
-				// Start the server to trigger initialization listeners
+				// Start the server to 触发 initialization listeners
 				this.tomcat.start();
 
 				// We can re-throw failure exception directly in the main thread
@@ -154,13 +154,17 @@ public class TomcatWebServer implements WebServer {
 		}
 	}
 
+	/**
+	 * 重新抛出延迟的启动异常
+	 * @throws Exception
+	 */
 	private void rethrowDeferredStartupExceptions() throws Exception {
 		Container[] children = this.tomcat.getHost().findChildren();
 		for (Container container : children) {
 			if (container instanceof TomcatEmbeddedContext) {
 				TomcatStarter tomcatStarter = ((TomcatEmbeddedContext) container).getStarter();
 				if (tomcatStarter != null) {
-					Exception exception = tomcatStarter.getStartUpException();
+ 					Exception exception = tomcatStarter.getStartUpException();
 					if (exception != null) {
 						throw exception;
 					}

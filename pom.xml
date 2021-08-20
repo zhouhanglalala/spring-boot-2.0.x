@@ -55,56 +55,56 @@
 							</dependency>
 						</dependencies>
 						<executions>
-							<execution>
-								<id>checkstyle-validation</id>
-								<phase>validate</phase>
-								<configuration>
-									<skip>${disable.checks}</skip>
-									<configLocation>src/checkstyle/checkstyle.xml</configLocation>
-									<suppressionsLocation>src/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
-									<includeTestSourceDirectory>true</includeTestSourceDirectory>
-									<propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>
-									<encoding>UTF-8</encoding>
-								</configuration>
-								<goals>
-									<goal>check</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>nohttp-checkstyle-validation</id>
-								<phase>validate</phase>
-								<configuration>
-									<skip>${disable.checks}</skip>
-									<configLocation>src/checkstyle/nohttp-checkstyle.xml</configLocation>
-									<suppressionsLocation>src/checkstyle/nohttp-checkstyle-suppressions.xml</suppressionsLocation>
-									<propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>
-									<encoding>UTF-8</encoding>
-									<sourceDirectories>${basedir}</sourceDirectories>
-									<includes>**/*</includes>
-									<excludes>**/.git/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class,**/spring-boot-gradle-plugin/build/**,**/spring-boot-gradle-plugin/bin/**</excludes>
-								</configuration>
-								<goals>
-									<goal>check</goal>
-								</goals>
-								<inherited>false</inherited>
-							</execution>
+<!--							<execution>-->
+<!--								<id>checkstyle-validation</id>-->
+<!--								<phase>validate</phase>-->
+<!--								<configuration>-->
+<!--									<skip>${disable.checks}</skip>-->
+<!--									<configLocation>src/checkstyle/checkstyle.xml</configLocation>-->
+<!--									<suppressionsLocation>src/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>-->
+<!--									<includeTestSourceDirectory>true</includeTestSourceDirectory>-->
+<!--									<propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>-->
+<!--									<encoding>UTF-8</encoding>-->
+<!--								</configuration>-->
+<!--								<goals>-->
+<!--									<goal>check</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--							<execution>-->
+<!--								<id>nohttp-checkstyle-validation</id>-->
+<!--								<phase>validate</phase>-->
+<!--								<configuration>-->
+<!--									<skip>${disable.checks}</skip>-->
+<!--									<configLocation>src/checkstyle/nohttp-checkstyle.xml</configLocation>-->
+<!--									<suppressionsLocation>src/checkstyle/nohttp-checkstyle-suppressions.xml</suppressionsLocation>-->
+<!--									<propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>-->
+<!--									<encoding>UTF-8</encoding>-->
+<!--									<sourceDirectories>${basedir}</sourceDirectories>-->
+<!--									<includes>**/*</includes>-->
+<!--									<excludes>**/.git/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class,**/spring-boot-gradle-plugin/build/**,**/spring-boot-gradle-plugin/bin/**</excludes>-->
+<!--								</configuration>-->
+<!--								<goals>-->
+<!--									<goal>check</goal>-->
+<!--								</goals>-->
+<!--								<inherited>false</inherited>-->
+<!--							</execution>-->
 						</executions>
 					</plugin>
 					<plugin>
 						<groupId>io.spring.javaformat</groupId>
 						<artifactId>spring-javaformat-maven-plugin</artifactId>
 						<version>${spring-javaformat.version}</version>
-						<executions>
-							<execution>
-								<phase>validate</phase>
-								<configuration>
-									<skip>${disable.checks}</skip>
-								</configuration>
-								<goals>
-									<goal>validate</goal>
-								</goals>
-							</execution>
-						</executions>
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<phase>validate</phase>-->
+<!--								<configuration>-->
+<!--									<skip>${disable.checks}</skip>-->
+<!--								</configuration>-->
+<!--								<goals>-->
+<!--									<goal>validate</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--						</executions>-->
 					</plugin>
 				</plugins>
 			</build>
