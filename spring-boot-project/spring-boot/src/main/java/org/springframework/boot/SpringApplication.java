@@ -48,6 +48,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.web.reactive.context.StandardReactiveWebEnvironment;
+import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationListener;
@@ -314,18 +315,27 @@ public class SpringApplication {
 		stopWatch.start();
 		// 声明环境对象
 		ConfigurableApplicationContext context = null;
+		// 创建异常报告集合对象
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+		// 控制应用在没有显示器的时候也能启动
 		configureHeadlessProperty();
+		// SpringApplicationRunListener和ApplicationListener有什么区别
+		// 拿到SpringApplicationRunListener类型的工厂实例实例
+		// 只有一个EventPublishingRunListener
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		// 开始监听
 		listeners.starting();
 		try {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			// 创建ioc环境运行需要的环境
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
+			// 创建IOC容器
 			context = createApplicationContext();
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
+			// 准备上下文环境：传入ioc容器，ioc运行需要的环境，监听
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
@@ -353,8 +363,9 @@ public class SpringApplication {
 
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
-		// Create and configure the environment
+		// Create and configure the environment 创建并配置环境
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		// 配置环境
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
 		ConfigurationPropertySources.attach(environment);
 		listeners.environmentPrepared(environment);
@@ -420,12 +431,19 @@ public class SpringApplication {
 		refresh(context);
 	}
 
+	/**
+	 * 其实是想设置该应用程序,即使没有检测到显示器,也允许其启动,服务器一般都没有显示器.
+	 * headless = true
+	 * java.awt.headless是J2SE的一种模式用于在缺少显示屏、键盘或者鼠标时的系统配置
+	 * System.getProperty(a, b) 拿不到a就返回b 保证一定能拿到
+	 */
 	private void configureHeadlessProperty() {
 		System.setProperty(SYSTEM_PROPERTY_JAVA_AWT_HEADLESS,
 				System.getProperty(SYSTEM_PROPERTY_JAVA_AWT_HEADLESS, Boolean.toString(this.headless)));
 	}
 
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
+		// 用类型数组找到listener对应的构造器
 		Class<?>[] types = new Class<?>[] { SpringApplication.class, String[].class };
 		return new SpringApplicationRunListeners(logger,
 				getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
@@ -455,7 +473,9 @@ public class SpringApplication {
 				// 根据spring.factories中的工厂字符串拿到类信息
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
+				// 根据类型数组匹配对应的构造器
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);
+				// 把main方法入参、构造器丢进去创建对象 如果main入参为空则用BeanUtils默认的基本数据类型默认值或null
 				T instance = (T) BeanUtils.instantiateClass(constructor, args);
 				instances.add(instance);
 			}
@@ -611,6 +631,7 @@ public class SpringApplication {
 	 * apply additional processing as required.
 	 * @param context the application context
 	 */
+	// 应用上下文后置处理
 	protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
 		if (this.beanNameGenerator != null) {
 			context.getBeanFactory().registerSingleton(AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,

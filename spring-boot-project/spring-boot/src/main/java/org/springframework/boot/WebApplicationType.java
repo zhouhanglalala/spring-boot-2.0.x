@@ -45,8 +45,7 @@ public enum WebApplicationType {
 	 */
 	REACTIVE;
 
-	private static final String[] SERVLET_INDICATOR_CLASSES = { "javax.servlet.Servlet",
-			"org.springframework.web.context.ConfigurableWebApplicationContext" };
+	private static final String[] SERVLET_INDICATOR_CLASSES = { "javax.servlet.Servlet", "org.springframework.web.context.ConfigurableWebApplicationContext" };
 
 	private static final String WEBMVC_INDICATOR_CLASS = "org.springframework.web.servlet.DispatcherServlet";
 
@@ -58,11 +57,21 @@ public enum WebApplicationType {
 
 	private static final String REACTIVE_APPLICATION_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext";
 
+	/**
+	 * 1、能加载reactive.DispatcherHandler且不能加载servlet.DispatcherServlet和servlet.ServletContainer则是响应式
+	 * 2、不能加载SERVLET_INDICATOR_CLASSES中任何一个则是非web环境
+	 * 3、基于servlet的web环境
+	 * @return
+	 */
 	static WebApplicationType deduceFromClasspath() {
-		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null) && !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
-				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
+		boolean canLoadDispatcherHandler = ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null);
+		boolean canLoadDispatcherServlet = ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null);
+		boolean canLoadServletContainer = ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null);
+
+		if (canLoadDispatcherHandler && !canLoadDispatcherServlet && !canLoadServletContainer) {
 			return WebApplicationType.REACTIVE;
 		}
+
 		for (String className : SERVLET_INDICATOR_CLASSES) {
 			if (!ClassUtils.isPresent(className, null)) {
 				return WebApplicationType.NONE;
@@ -84,8 +93,7 @@ public enum WebApplicationType {
 	private static boolean isAssignable(String target, Class<?> type) {
 		try {
 			return ClassUtils.resolveClassName(target, null).isAssignableFrom(type);
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			return false;
 		}
 	}

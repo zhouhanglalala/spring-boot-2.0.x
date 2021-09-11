@@ -54,7 +54,23 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 	public EventPublishingRunListener(SpringApplication application, String[] args) {
 		this.application = application;
 		this.args = args;
+		// 初始化多路广播器
 		this.initialMulticaster = new SimpleApplicationEventMulticaster();
+		// 把ApplicationListener都放到SimpleApplicationEventMulticaster里面
+		/*
+		# Application Listeners
+		org.springframework.context.ApplicationListener=\
+		org.springframework.boot.ClearCachesApplicationListener,\
+		org.springframework.boot.builder.ParentContextCloserApplicationListener,\
+		org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor,\
+		org.springframework.boot.context.FileEncodingApplicationListener,\
+		org.springframework.boot.context.config.AnsiOutputApplicationListener,\
+		org.springframework.boot.context.config.ConfigFileApplicationListener,\
+		org.springframework.boot.context.config.DelegatingApplicationListener,\
+		org.springframework.boot.context.logging.ClasspathLoggingApplicationListener,\
+		org.springframework.boot.context.logging.LoggingApplicationListener,\
+		org.springframework.boot.liquibase.LiquibaseServiceLocatorApplicationListener
+		 */
 		for (ApplicationListener<?> listener : application.getListeners()) {
 			this.initialMulticaster.addApplicationListener(listener);
 		}

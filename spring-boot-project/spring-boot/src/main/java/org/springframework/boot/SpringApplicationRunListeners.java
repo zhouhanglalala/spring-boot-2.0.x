@@ -43,6 +43,7 @@ class SpringApplicationRunListeners {
 	}
 
 	void starting() {
+		// 回调所有监听器的监听方法
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.starting();
 		}
