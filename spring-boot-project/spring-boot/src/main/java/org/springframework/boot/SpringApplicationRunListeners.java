@@ -49,6 +49,31 @@ class SpringApplicationRunListeners {
 		}
 	}
 
+	/**
+	 * 进去for之后会拿到7个
+	 * ConfigFileApplicationListener:
+	 * 解析application.properties/yml以及application-profile.properties/yml配置文件核心事件监听器
+	 *
+	 * AnsiOutputApplicationListener:
+	 * 根据spring.output.ansi.enabled配置值配置日志打印色彩模式。
+	 *
+	 * LoggingApplicationListener:
+	 * 解析application.properties/yml配置文件logging开头的配置，并将配置信息初始化日志到系统。
+	 *
+	 * BackgroundPreinitializer：
+	 * 这个监听器不处理当前的事件。
+	 *
+	 * ClasspathLoggingApplicationListener：
+	 * 纯日志打印，启动过程中控制台debug级别的日志关键字“Application started with classpath”相关的信息就是这个监听器打印的。
+	 *
+	 * DelegatingApplicationListener：
+	 * application.properties/yml配置文件context.listener.classes配置的自定义监听器的代理执行者。主要工作是执行自定义配置的事件监听器。
+	 *
+	 * FileEncodingApplicationListener：
+	 * 将application.properties/yml配置文件spring.mandatory-file-encoding配置跟System.getProperty("file.encoding")值进行忽略大小写匹配，
+	 * 如果匹配不上，直接报错（throw new IllegalStateException("The Java Virtual Machine has not been configured to use the desired default character encoding (" + desired + ").")）
+	 * @param environment
+	 */
 	void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.environmentPrepared(environment);

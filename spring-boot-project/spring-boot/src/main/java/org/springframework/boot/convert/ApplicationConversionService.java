@@ -75,9 +75,11 @@ public class ApplicationConversionService extends FormattingConversionService {
 		ApplicationConversionService sharedInstance = ApplicationConversionService.sharedInstance;
 		if (sharedInstance == null) {
 			synchronized (ApplicationConversionService.class) {
+				// 再拿一遍 防止拿锁的过程中被人处理过了
 				sharedInstance = ApplicationConversionService.sharedInstance;
 				if (sharedInstance == null) {
 					sharedInstance = new ApplicationConversionService();
+					// 自己持有自己？
 					ApplicationConversionService.sharedInstance = sharedInstance;
 				}
 			}

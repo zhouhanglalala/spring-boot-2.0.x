@@ -181,11 +181,28 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 		}
 	}
 
+	/**
+	 *  this
+	 *  org.springframework.boot.env.EnvironmentPostProcessor=\
+	 * 	org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor,\
+	 * 	org.springframework.boot.env.SpringApplicationJsonEnvironmentPostProcessor,\
+	 * 	org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor,\
+	 * 	org.springframework.boot.reactor.DebugAgentEnvironmentPostProcessor
+	 * @param event 事件
+	 */
 	private void onApplicationEnvironmentPreparedEvent(ApplicationEnvironmentPreparedEvent event) {
+		// 从META-INF/spring.factories缓存获取EnvironmentPostProcessor配置的实现类
+		//org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor,\
+		//org.springframework.boot.env.SpringApplicationJsonEnvironmentPostProcessor,\
+		//org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor,\
+		//org.springframework.boot.reactor.DebugAgentEnvironmentPostProcessor
 		List<EnvironmentPostProcessor> postProcessors = loadPostProcessors();
+		// 把当前类对象也添加进去
 		postProcessors.add(this);
 		AnnotationAwareOrderComparator.sort(postProcessors);
+
 		for (EnvironmentPostProcessor postProcessor : postProcessors) {
+			// 调用postProcessEnvironment方法处理
 			postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
 		}
 	}
@@ -211,6 +228,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 	 * @see #addPostProcessors(ConfigurableApplicationContext)
 	 */
 	protected void addPropertySources(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
+		// 添加一个随机信息到systemEnvironment，暂不还不清楚这里作用是啥
 		RandomValuePropertySource.addToEnvironment(environment);
 		new Loader(environment, resourceLoader).load();
 	}
@@ -314,8 +332,11 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 
 		Loader(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
 			this.environment = environment;
+			// 实例化占位符
 			this.placeholdersResolver = new PropertySourcesPlaceholdersResolver(this.environment);
+			// 实例化资源加载器
 			this.resourceLoader = (resourceLoader != null) ? resourceLoader : new DefaultResourceLoader();
+			// 获取配置的配置资源加载器，这里默认获取到properties、yml两个格式的加载器
 			this.propertySourceLoaders = SpringFactoriesLoader.loadFactories(PropertySourceLoader.class,
 					getClass().getClassLoader());
 		}
@@ -327,6 +348,13 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 						this.processedProfiles = new LinkedList<>();
 						this.activatedProfiles = false;
 						this.loaded = new LinkedHashMap<>();
+						//初始化profile,这里两个逻辑分支：1、获取前面环境对象中是否存在profile相关配置，如果存在获取否则初始化默认的profile，
+						// 其中会初始化一个null占位符
+
+						// ----------------------------------------------------------------------------------------
+
+
+
 						initializeProfiles();
 						while (!this.profiles.isEmpty()) {
 							Profile profile = this.profiles.poll();

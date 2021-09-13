@@ -271,7 +271,7 @@ public class SpringApplication {
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		// 主资源 入口类
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
-		// web应用类型推测
+		// web应用类型推测 根据能不能加载对应类型的class判断
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
 		// 根据spring.factories中的工厂名字字符串 创建和ApplicationContextInitializer类型对应的实例对象
 		Collection springFactories = getSpringFactoriesInstances(ApplicationContextInitializer.class);
@@ -329,6 +329,7 @@ public class SpringApplication {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 			// 创建ioc环境运行需要的环境
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+			//
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
 			// 创建IOC容器
@@ -361,20 +362,30 @@ public class SpringApplication {
 		return context;
 	}
 
+
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
-		// Create and configure the environment 创建并配置环境
+		// 根据webApplicationType创建环境对象 StandardServletEnvironment
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
 		// 配置环境
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		// 将StandardServletEnvironment类MutablePropertySources propertySources属性封装为
+		// 迭代器SpringConfigurationPropertySources
+		// name为configurationProperties，source为SpringConfigurationPropertySources
 		ConfigurationPropertySources.attach(environment);
+		// 回调通知 环境准备完毕
+		// ConfigFileApplicationListener会去解析 application.properties
 		listeners.environmentPrepared(environment);
+		// 将配置文件中的spring.main开头的配置信息绑定到SpringApplication类对应的属性中
 		bindToSpringApplication(environment);
+		// 根据spring.main.web-application-type配置判断是否需要转换环境
 		if (!this.isCustomEnvironment) {
 			environment = new EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,
 					deduceEnvironmentClass());
 		}
+		// 环境属性源列表里面 添加一个 ConfigurationPropertySourcesPropertySource
 		ConfigurationPropertySources.attach(environment);
+		// 整个环境对象装配完成。
 		return environment;
 	}
 
@@ -443,8 +454,9 @@ public class SpringApplication {
 	}
 
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
-		// 用类型数组找到listener对应的构造器
+		// 用类型数组找到listener对应的构造器并实例化
 		Class<?>[] types = new Class<?>[] { SpringApplication.class, String[].class };
+		// 属性文件中只有EventPublishingRunListener这一个实现
 		return new SpringApplicationRunListeners(logger,
 				getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
 	}
@@ -458,7 +470,7 @@ public class SpringApplication {
 		// Use names and ensure unique to protect against duplicates
 		// 加载"META-INF/spring.factories"下的Spring Factories
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
-		// 根据spring.factories中的工厂名字字符串 创建对应的实例对象
+		// 根据spring.factories中的工厂名字字符串 利用反射 创建对应的实例对象
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
@@ -492,6 +504,8 @@ public class SpringApplication {
 		}
 		switch (this.webApplicationType) {
 		case SERVLET:
+			// 初始化操作系统系统变量、JDK系统变量、Servlet上下文配置、Servlet配置文件配置等占位符对象，保证各类配置的顺序，
+			// 保存在StandardServletEnvironment类MutablePropertySources propertySources属性中。
 			return new StandardServletEnvironment();
 		case REACTIVE:
 			return new StandardReactiveWebEnvironment();
@@ -513,14 +527,18 @@ public class SpringApplication {
 	 */
 	protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
 		if (this.addConversionService) {
+			// 转换服务？ 装配所有默认转换器、格式化组件
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
+		// 装配main方法入参
 		configurePropertySources(environment, args);
+		// 设置配置文件
 		configureProfiles(environment, args);
 	}
 
 	/**
+	 * 把当前类中的属性和命令行启动参数添加到环境对象的属性源中
 	 * Add, remove or re-order any {@link PropertySource}s in this application's
 	 * environment.
 	 * @param environment this application's environment
@@ -528,10 +546,13 @@ public class SpringApplication {
 	 * @see #configureEnvironment(ConfigurableEnvironment, String[])
 	 */
 	protected void configurePropertySources(ConfigurableEnvironment environment, String[] args) {
+		// MutablePropertySources是个COW list 装了多个PropertySource
 		MutablePropertySources sources = environment.getPropertySources();
 		if (this.defaultProperties != null && !this.defaultProperties.isEmpty()) {
 			sources.addLast(new MapPropertySource("defaultProperties", this.defaultProperties));
 		}
+		// 如果有命令行参数，这里将命令行参数封装后添加到key为springApplicationCommandLineArgs
+		// 的MutablePropertySources属性List<PropertySource<?>> propertySourceList中
 		if (this.addCommandLineProperties && args.length > 0) {
 			String name = CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME;
 			if (sources.contains(name)) {
@@ -540,9 +561,11 @@ public class SpringApplication {
 				composite.addPropertySource(
 						new SimpleCommandLinePropertySource("springApplicationCommandLineArgs", args));
 				composite.addPropertySource(source);
+				// 这里按替换的方式，不破坏优先级顺序
 				sources.replace(name, composite);
 			}
 			else {
+				// 这里需要注意，通过main方法传入的参数添加到最前面，说明main方法参数优先级最高
 				sources.addFirst(new SimpleCommandLinePropertySource(args));
 			}
 		}
@@ -563,6 +586,10 @@ public class SpringApplication {
 		environment.setActiveProfiles(StringUtils.toStringArray(profiles));
 	}
 
+	/**
+	 * 往系统变量里设置spring.beaninfo.ignore为true
+	 * @param environment 环境对象
+	 */
 	private void configureIgnoreBeanInfo(ConfigurableEnvironment environment) {
 		if (System.getProperty(CachedIntrospectionResults.IGNORE_BEANINFO_PROPERTY_NAME) == null) {
 			Boolean ignore = environment.getProperty("spring.beaninfo.ignore", Boolean.class, Boolean.TRUE);

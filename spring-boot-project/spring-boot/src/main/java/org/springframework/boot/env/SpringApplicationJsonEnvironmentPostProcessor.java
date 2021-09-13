@@ -45,8 +45,15 @@ import org.springframework.web.context.support.StandardServletEnvironment;
 /**
  * An {@link EnvironmentPostProcessor} that parses JSON from
  * {@code spring.application.json} or equivalently {@code SPRING_APPLICATION_JSON} and
- * adds it as a map property source to the {@link Environment}. The new properties are
- * added with higher priority than the system properties.
+ * adds it as a map property source to the {@link Environment}.
+ *
+ * spring.application.json和SPRING_APPLICATION_JSON可以用json的形式设置属性
+ *
+ * eg:
+ * SPRING_APPLICATION_JSON='{"spring": {"datasource": { "url":"jdbc:mysql://localhost:3306/myapp", "username":"myappuser", "password":"mypassword" } } }' java -jar build/libs/myapp_springboot.war
+ * -Dspring.application.json='{"spring": {"datasource": { "url":"jdbc:mysql://localhost:3306/myapp", "username":"myappuser", "password":"mypassword" } } }' java -jar build/libs/myapp_springboot.war
+ *
+ * 新添加的属性比系统属性优先级更高
  *
  * @author Dave Syer
  * @author Phillip Webb
@@ -93,14 +100,24 @@ public class SpringApplicationJsonEnvironmentPostProcessor implements Environmen
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		MutablePropertySources propertySources = environment.getPropertySources();
+		//  1、获取属性name为spring.application.json或SPRING_APPLICATION_JSON的值，封装为JsonPropertyValue对象
+		//  2、对JsonPropertyValue对象非null判断
+		//  3、对JsonPropertyValue对象的
 		propertySources.stream().map(JsonPropertyValue::get).filter(Objects::nonNull).findFirst()
 				.ifPresent((v) -> processJson(environment, v));
 	}
 
 	private void processJson(ConfigurableEnvironment environment, JsonPropertyValue propertyValue) {
+		// 根据引入的JSON解析依赖找到可用的JSON解析工具类，例如：JacksonJsonParser
 		JsonParser parser = JsonParserFactory.getJsonParser();
+		// 将json字符串转为Map
 		Map<String, Object> map = parser.parseMap(propertyValue.getJson());
 		if (!map.isEmpty()) {
+			//将扁平化后的参数保存到环境对象CopyOnWriteArrayList集合中，name:spring.application.json,value:内部类JsonPropertySource
+			//flatten作用是将Map中值是集合或Map类的转为扁平化，
+			// 例如:     map.put("zkNode","10.73.123.338,10.73.123.339")
+			// 扁平化后:  map.put("zkNode[0]","10.73.123.338")
+			//           map.put("zkNode[1]","10.73.123.339")
 			addJsonPropertySource(environment, new JsonPropertySource(propertyValue, flatten(map)));
 		}
 	}

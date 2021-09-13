@@ -32,7 +32,7 @@ org.springframework.boot.context.logging.ClasspathLoggingApplicationListener,\
 org.springframework.boot.context.logging.LoggingApplicationListener,\
 org.springframework.boot.liquibase.LiquibaseServiceLocatorApplicationListener
 
-# Environment Post Processors
+# Environment Post Processors 环境设置完之后会读取这里
 org.springframework.boot.env.EnvironmentPostProcessor=\
 org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor,\
 org.springframework.boot.env.SpringApplicationJsonEnvironmentPostProcessor,\

@@ -33,7 +33,12 @@ import org.springframework.core.env.SystemEnvironmentPropertySource;
  * {@link SystemEnvironmentPropertySource} with an
  * {@link OriginAwareSystemEnvironmentPropertySource} that can track the
  * {@link SystemEnvironmentOrigin} for every system environment property.
- *
+ * SystemEnvironmentPropertySourceEnvironmentPostProcessor类是EnvironmentPostProcessor接口的实现类，
+ * 用来替换Environment环境中的systemEnvironment，
+ * systemEnvironment中最初存储的是SystemEnvironmentPropertySource类，
+ * 现由实现类OriginAwareSystemEnvironmentPropertySource替换，
+ * OriginAwareSystemEnvironmentPropertySource提供了获取Origin的方法，
+ * 即返回SystemEnvironmentOrigin对象。
  * @author Madhura Bhave
  * @since 2.0.0
  */
@@ -48,6 +53,7 @@ public class SystemEnvironmentPropertySourceEnvironmentPostProcessor implements 
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+		// systemEnvironment
 		String sourceName = StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME;
 		PropertySource<?> propertySource = environment.getPropertySources().get(sourceName);
 		if (propertySource != null) {
@@ -55,12 +61,22 @@ public class SystemEnvironmentPropertySourceEnvironmentPostProcessor implements 
 		}
 	}
 
+	/**
+	 * StubPropertySource对象的getProperty(String name)固定返回null,
+	 * 也就是说StubPropertySource对象是不能正常工作的，
+	 * 前面只是为了定义优先级顺序临时使用了一个不能工作的占位符对象，
+	 * 这里把它替换为可以正常工作的对象
+	 * @param environment
+	 * @param sourceName
+	 * @param propertySource
+	 */
 	@SuppressWarnings("unchecked")
 	private void replacePropertySource(ConfigurableEnvironment environment, String sourceName,
 			PropertySource<?> propertySource) {
 		Map<String, Object> originalSource = (Map<String, Object>) propertySource.getSource();
 		SystemEnvironmentPropertySource source = new OriginAwareSystemEnvironmentPropertySource(sourceName,
 				originalSource);
+		// 替换
 		environment.getPropertySources().replace(sourceName, source);
 	}
 
